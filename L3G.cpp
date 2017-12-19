@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include <math.h>
 
+
 // Defines ////////////////////////////////////////////////////////////////
 
 // The Arduino two-wire interface uses a 7-bit number for the address,
@@ -235,4 +236,64 @@ int L3G::testReg(byte address, regAddr reg)
   {
     return TEST_REG_ERROR;
   }
+}
+
+// ----------------------------------------------------------
+
+IntegratingL3G::IntegratingL3G()
+: L3G()
+{
+}
+
+void IntegratingL3G::reset()
+{
+	eulerAngles.x = 0;
+	eulerAngles.y = 0;
+	eulerAngles.z = 0;
+}
+
+void IntegratingL3G::calibrate()
+{
+	#define NUM_TESTS 10
+	vector<int16_t> average;
+	for(int counter = 0; counter < NUM_TESTS; ++counter)
+	{
+		delay(20);
+		read();
+		average.x += g.x;
+		average.y += g.y;
+		average.z += g.z;
+	}
+	
+	average.x /= NUM_TESTS;
+	average.y /= NUM_TESTS;
+	average.z /= NUM_TESTS;
+	
+	offset = average;
+}
+
+#define COUNTS_TO_DEGREES 8.75 * .001
+
+void IntegratingL3G::update()
+{
+	read();
+	
+	uint64_t currMicros = micros();
+	
+	// overflow has occurred
+	if(currMicros < lastMicros)
+	{
+		lastMicros = micros();
+		return;
+	}
+	
+	uint64_t timestepMicros = currMicros - lastMicros;
+	
+	// note: we are using trapezoidal integration -- so add to the previous value and divide by 2
+	eulerAngles.x += (((g.x + offset.x) + lastEulerAngles.x) / 2) * 1e-6 * COUNTS_TO_DEGREES * timestepMicros;
+	eulerAngles.y += (((g.x + offset.x) + lastEulerAngles.x) / 2) * 1e-6 * COUNTS_TO_DEGREES * timestepMicros;
+	eulerAngles.z += (((g.x + offset.x) + lastEulerAngles.x) / 2) * 1e-6 * COUNTS_TO_DEGREES * timestepMicros;
+	
+	lastMicros = currMicros;
+	lastEulerAngles = eulerAngles;
 }

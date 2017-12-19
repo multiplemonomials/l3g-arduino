@@ -2,6 +2,7 @@
 #define L3G_h
 
 #include <Arduino.h> // for byte data type
+#include <limits.h>
 
 class L3G
 {
@@ -114,6 +115,30 @@ template <typename Ta, typename Tb> float L3G::vector_dot(const vector<Ta> *a, c
 {
   return (a->x * b->x) + (a->y * b->y) + (a->z * b->z);
 }
+
+class IntegratingL3G : public L3G
+{
+	
+	uint64_t lastMicros = ULONG_MAX; // set to ULONG_MAX to force an overflow-update on the first update()
+	
+	L3G::vector<float> lastEulerAngles;
+	
+	public: 
+	L3G::vector<int16_t> offset = {0, 0, 0};
+
+	IntegratingL3G();
+		
+	// angles of rotation about x, y, and z axes, in degrees
+	L3G::vector<float> eulerAngles;
+	
+	// reset so that the current heading is zero
+	void reset();
+	
+	// call this function as often as possible to update eulerAngles.
+	void update();
+	
+	void calibrate();
+};
 
 #endif
 
