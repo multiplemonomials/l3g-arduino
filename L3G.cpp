@@ -290,10 +290,10 @@ void IntegratingL3G::update()
 	uint64_t timestepMicros = currMicros - lastMicros;
 	
 	// note: we are using trapezoidal integration -- so add to the previous value and divide by 2
-	eulerAngles.x += (((g.x + offset.x) + lastEulerAngles.x) / 2) * 1e-6 * COUNTS_TO_DEGREES * timestepMicros;
-	eulerAngles.y += (((g.x + offset.x) + lastEulerAngles.x) / 2) * 1e-6 * COUNTS_TO_DEGREES * timestepMicros;
-	eulerAngles.z += (((g.x + offset.x) + lastEulerAngles.x) / 2) * 1e-6 * COUNTS_TO_DEGREES * timestepMicros;
+	eulerAngles.x += (((g.x - offset.x + lastRate.x) * COUNTS_TO_DEGREES) / 2) * 1e-6  * timestepMicros;
+	eulerAngles.y += (((g.y - offset.y + lastRate.y) * COUNTS_TO_DEGREES) / 2) * 1e-6  * timestepMicros;
+	eulerAngles.z += (((g.z - offset.z + lastRate.z) * COUNTS_TO_DEGREES) / 2) * 1e-6  * timestepMicros;
 	
 	lastMicros = currMicros;
-	lastEulerAngles = eulerAngles;
+	lastRate = g;
 }

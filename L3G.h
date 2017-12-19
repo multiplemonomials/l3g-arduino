@@ -121,7 +121,7 @@ class IntegratingL3G : public L3G
 	
 	uint64_t lastMicros = ULONG_MAX; // set to ULONG_MAX to force an overflow-update on the first update()
 	
-	L3G::vector<float> lastEulerAngles;
+	L3G::vector<int16_t> lastRate;
 	
 	public: 
 	L3G::vector<int16_t> offset = {0, 0, 0};
